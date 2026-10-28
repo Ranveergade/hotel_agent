@@ -1,0 +1,70 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Hotel Staff Dashboard</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: #0f172a; color: #e2e8f0; margin: 0; padding: 32px; }
+        h1 { color: #ffffff; }
+        .cards { display: flex; flex-wrap: wrap; gap: 16px; margin: 24px 0; }
+        .card { background: #1e293b; padding: 22px; border-radius: 12px; min-width: 180px; }
+        .number { font-size: 32px; font-weight: bold; color: #38bdf8; }
+        table { width: 100%; border-collapse: collapse; background: #1e293b; margin-bottom: 28px; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #334155; }
+        th { color: #7dd3fc; }
+        .empty { color: #94a3b8; }
+    </style>
+</head>
+<body>
+    <h1>Hotel Operations Dashboard</h1>
+    <p>Live view of records stored in the demo database.</p>
+
+    <div class="cards">
+        <div class="card">Reservations<div class="number">{{ reservation_count }}</div></div>
+        <div class="card">Guest Leads<div class="number">{{ lead_count }}</div></div>
+        <div class="card">Open Tickets<div class="number">{{ open_ticket_count }}</div></div>
+    </div>
+
+    <h2>Reservations</h2>
+    <table>
+        <tr><th>Booking ID</th><th>Guest</th><th>Hotel</th><th>Room</th><th>Check-in</th><th>Check-out</th><th>Total</th><th>Status</th></tr>
+        {% for r in reservations %}
+        <tr>
+            <td>{{ r.booking_id }}</td><td>{{ r.guest_name }}</td><td>{{ r.hotel.name }}</td>
+            <td>{{ r.room_type }} ({{ r.rooms }})</td><td>{{ r.check_in }}</td><td>{{ r.check_out }}</td>
+            <td>₹{{ r.total_price }}</td><td>{{ r.status }}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="8" class="empty">No reservations found.</td></tr>
+        {% endfor %}
+    </table>
+
+    <h2>Guest Leads</h2>
+    <table>
+        <tr><th>Name</th><th>Email</th><th>Phone</th><th>City</th><th>Requirements</th><th>Status</th></tr>
+        {% for lead in leads %}
+        <tr>
+            <td>{{ lead.name }}</td><td>{{ lead.email }}</td><td>{{ lead.phone }}</td>
+            <td>{{ lead.preferred_city }}</td><td>{{ lead.requirements }}</td><td>{{ lead.status }}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="6" class="empty">No guest leads found.</td></tr>
+        {% endfor %}
+    </table>
+
+    <h2>Support Tickets</h2>
+    <table>
+        <tr><th>Ticket ID</th><th>Guest</th><th>Subject</th><th>Priority</th><th>Status</th></tr>
+        {% for ticket in tickets %}
+        <tr>
+            <td>{{ ticket.ticket_id }}</td><td>{{ ticket.guest_name }}</td>
+            <td>{{ ticket.subject }}</td><td>{{ ticket.priority }}</td><td>{{ ticket.status }}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="5" class="empty">No support tickets found.</td></tr>
+        {% endfor %}
+    </table>
+</body>
+</html>

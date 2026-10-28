@@ -96,3 +96,170 @@ class IndianHotel(models.Model):
 
     def __str__(self):
         return f"{self.name} - {self.city}"
+
+
+class SupportTicket(models.Model):
+    STATUS_CHOICES = [
+        ("OPEN", "Open"),
+        ("IN_PROGRESS", "In Progress"),
+        ("RESOLVED", "Resolved"),
+    ]
+
+    PRIORITY_CHOICES = [
+        ("LOW", "Low"),
+        ("MEDIUM", "Medium"),
+        ("HIGH", "High"),
+        ("URGENT", "Urgent"),
+    ]
+
+    ticket_id = models.CharField(
+        max_length=20,
+        unique=True,
+        editable=False,
+        db_index=True,
+    )
+    guest_name = models.CharField(max_length=150, blank=True)
+    guest_email = models.EmailField(blank=True)
+    guest_phone = models.CharField(max_length=20, blank=True)
+    hotel_name = models.CharField(max_length=255, blank=True)
+    subject = models.CharField(max_length=200)
+    description = models.TextField()
+    priority = models.CharField(
+        max_length=10,
+        choices=PRIORITY_CHOICES,
+        default="MEDIUM",
+    )
+    status = models.CharField(
+        max_length=15,
+        choices=STATUS_CHOICES,
+        default="OPEN",
+        db_index=True,
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def save(self, *args, **kwargs):
+        if not self.ticket_id:
+            import uuid
+            self.ticket_id = f"TKT-{uuid.uuid4().hex[:12].upper()}"
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"{self.ticket_id} - {self.subject}"
+
+
+
+import uuid
+from django.db import models
+
+
+class RoomInventory(models.Model):
+    """Number of rooms available for a hotel and room type on a date."""
+
+    hotel = models.ForeignKey(
+        IndianHotel,
+        on_delete=models.PROTECT,
+        related_name="room_inventory",
+    )
+    room_type = models.CharField(max_length=150)
+    date = models.DateField(db_index=True)
+    total_rooms = models.PositiveIntegerField(default=1)
+    price_per_night = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+    )
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["hotel", "room_type", "date"],
+                name="unique_hotel_room_inventory_date",
+            ),
+        ]
+        ordering = ["date", "hotel__name"]
+
+    def __str__(self):
+        return f"{self.hotel.name} | {self.room_type} | {self.date}"
+
+
+class Reservation(models.Model):
+    STATUS_CHOICES = [
+        ("CONFIRMED", "Confirmed"),
+        ("CANCELLED", "Cancelled"),
+    ]
+
+    booking_id = models.CharField(
+        max_length=20,
+        unique=True,
+        editable=False,
+        db_index=True,
+    )
+    hotel = models.ForeignKey(
+        IndianHotel,
+        on_delete=models.PROTECT,
+        related_name="reservations",
+    )
+    room_type = models.CharField(max_length=150)
+    guest_name = models.CharField(max_length=150)
+    guest_email = models.EmailField()
+    guest_phone = models.CharField(max_length=20, blank=True)
+    check_in = models.DateField(db_index=True)
+    check_out = models.DateField(db_index=True)
+    adults = models.PositiveSmallIntegerField(default=1)
+    children = models.PositiveSmallIntegerField(default=0)
+    rooms = models.PositiveSmallIntegerField(default=1)
+    price_per_night = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+    )
+    total_price = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+    )
+    status = models.CharField(
+        max_length=12,
+        choices=STATUS_CHOICES,
+        default="CONFIRMED",
+        db_index=True,
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def save(self, *args, **kwargs):
+        if not self.booking_id:
+            self.booking_id = f"BK-{uuid.uuid4().hex[:12].upper()}"
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"{self.booking_id} - {self.guest_name}"
+
+
+class Lead(models.Model):
+    STATUS_CHOICES = [
+        ("NEW", "New"),
+        ("CONTACTED", "Contacted"),
+        ("QUALIFIED", "Qualified"),
+        ("CONVERTED", "Converted"),
+        ("LOST", "Lost"),
+    ]
+
+    name = models.CharField(max_length=150)
+    email = models.EmailField(blank=True)
+    phone = models.CharField(max_length=20, blank=True)
+    preferred_city = models.CharField(max_length=100, blank=True)
+    requirements = models.TextField(blank=True)
+    source = models.CharField(max_length=50, default="AI_CHAT")
+    status = models.CharField(
+        max_length=12,
+        choices=STATUS_CHOICES,
+        default="NEW",
+        db_index=True,
+    )
+    follow_up_at = models.DateTimeField(null=True, blank=True)
+    notes = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.name} - {self.status}"
